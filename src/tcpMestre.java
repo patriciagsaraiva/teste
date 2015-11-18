@@ -6,6 +6,10 @@ import net.wimpi.modbus.io.*;
 import net.wimpi.modbus.net.*;
 import net.wimpi.modbus.util.*;
 
+// CONFIGURAÇÕES DE RUN:
+// VM options: -Dnet.wimpi.modbus.debug=true
+// Program arguments: localhost:5555 0 4 3
+
 public class tcpMestre {
 
     public static void main(String[] args) {

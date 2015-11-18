@@ -2,8 +2,11 @@ import net.wimpi.modbus.Modbus;
 import net.wimpi.modbus.net.*;
 import net.wimpi.modbus.procimg.*;
 import net.wimpi.modbus.ModbusCoupler;
-
 import java.net.InetAddress;
+
+// CONFIGURAÇÕES DE RUN:
+// VM options: -Dnet.wimpi.modbus.debug=true
+// Program arguments: localhost 5555
 
 public class tcpEscravo {
 
