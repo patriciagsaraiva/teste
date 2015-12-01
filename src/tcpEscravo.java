@@ -39,6 +39,11 @@ public class tcpEscravo {
             spi.addDigitalIn(new SimpleDigitalIn(true));
             spi.addDigitalIn(new SimpleDigitalIn(false));
             spi.addDigitalIn(new SimpleDigitalIn(true));
+            spi.addDigitalIn(new SimpleDigitalIn(true));
+            spi.addDigitalIn(new SimpleDigitalIn(true));
+            spi.addDigitalIn(new SimpleDigitalIn(true));
+            spi.addDigitalIn(new SimpleDigitalIn(false));
+
             spi.addRegister(new SimpleRegister(251));
             spi.addInputRegister(new SimpleInputRegister(45));
 
