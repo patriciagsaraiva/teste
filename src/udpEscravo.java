@@ -12,6 +12,7 @@ public class udpEscravo {
         byte[] sendData = new byte[1024];
         while (true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            System.out.println("Listening...");
             serverSocket.receive(receivePacket);
             String sentence = new String(receivePacket.getData());
             System.out.println("RECEIVED: " + sentence);
@@ -25,4 +26,7 @@ public class udpEscravo {
         }
     }
 
+    public static void decodeMessage (String message) {
+
+    }
 }

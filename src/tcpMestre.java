@@ -2,6 +2,8 @@ import java.net.*;
 import net.wimpi.modbus.msg.*;
 import net.wimpi.modbus.io.*;
 import net.wimpi.modbus.net.*;
+import net.wimpi.modbus.procimg.Register;
+import net.wimpi.modbus.procimg.SimpleRegister;
 import net.wimpi.modbus.util.*;
 
 // CONFIGURAÇÕES DE RUN:
@@ -15,11 +17,11 @@ public class tcpMestre {
         InetAddress addr = null;
         int port_plant = 5502;
         int port_plc = 5501;
-        int repeat = 60; //a loop for repeating the transaction
+        int repeat = 2; //a loop for repeating the transaction
 
         for (int i = 0; i < repeat; i++) {
             try {
-                Thread.sleep(250);
+                Thread.sleep(5000);
             } catch(InterruptedException ie) {}
 
             try {
@@ -27,31 +29,36 @@ public class tcpMestre {
                 addr = InetAddress.getByName(args[0]);
 
                 //2. Open the connections
-                TCPMasterConnection con_plant = tcpMestre.openConnection(addr,port_plant);
-                TCPMasterConnection con_plc = tcpMestre.openConnection(addr,port_plc);
+                TCPMasterConnection con_plant = tcpMestre.openConnection(addr, port_plant);
 
                 con_plant.connect();
-
-                //3. Prepare the requests
-
-
-
 
                 //READING THE COILS (MOTORS)
                 BitVector res_coils = tcpMestre.readCoils(con_plant, 0, 6);
                 System.out.println("Coils Status = " + res_coils);
 
                 //READING THE INPUTS (SENSORS)
-                BitVector res_sensors = tcpMestre.readSensors(con_plant, 0, 3);
+                BitVector res_sensors = tcpMestre.readSensors(con_plant, 0, 2);
                 System.out.println("Inputs Status = " + res_sensors);
+
+                //READ THE R VARIABLE (PIECES)
+
+                tcpMestre.writeRegister(con_plant, 0, 6);
+
+                ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plant, 0, 1);
+                System.out.println("Piece: " + res_variables.getRegisterValue(0));
+
+
                 con_plant.close();
 
                 //READING THE VARIABLES (PLC)
-                ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plc, 0, 2);
-                System.out.println("Variables Status = " + res_variables.getRegisterValue(0) + ", " + res_variables.getRegisterValue(1));
-                con_plc.connect();
+                //TCPMasterConnection con_plc = tcpMestre.openConnection(addr,port_plc);
+                //con_plc.connect();
 
-                con_plc.close();
+                //ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plc, 0, 2, 2);
+                //System.out.println("Variables Status = " + res_variables.getRegisterValue(0) + ", " + res_variables.getRegisterValue(1));
+
+                //con_plc.close();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -98,7 +105,7 @@ public class tcpMestre {
         try {
             ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
             ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(ref, count);
-            req.setUnitID(2);
+            //req.setUnitID(0);
 
             trans.setRequest(req);
             trans.execute();
@@ -108,5 +115,38 @@ public class tcpMestre {
         }
         return res;
     }
+
+    public static ReadMultipleRegistersResponse readVariables (TCPMasterConnection con, int ref, int count, int id) {
+        ReadMultipleRegistersResponse res = null;
+        try {
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+            ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(ref, count);
+            req.setUnitID(id);
+
+            trans.setRequest(req);
+            trans.execute();
+            res = (ReadMultipleRegistersResponse) trans.getResponse();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return res;
+    }
+
+    public static void writeRegister (TCPMasterConnection con, int ref, int value) {
+        try {
+            Register r = new SimpleRegister(0);
+            r.setValue(value);
+
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+            WriteSingleRegisterRequest req = new WriteSingleRegisterRequest(ref, r);
+            trans.setRequest(req);
+            trans.execute();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }
+
+
+
 
