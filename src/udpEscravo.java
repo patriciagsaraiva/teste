@@ -26,7 +26,7 @@ public class udpEscravo {
         }
     }
 
-    public static void decodeMessage (String message) {
+    public static void decodeMessage (String message, char trans, int no, int pIni, int pFin, int n) {
 
     }
 }
