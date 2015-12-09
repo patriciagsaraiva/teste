@@ -17,8 +17,9 @@ public class tcpMestre {
         InetAddress addr = null;
         int port_plant = 5502;
         int port_plc = 5501;
-        int repeat = 2; //a loop for repeating the transaction
-
+        int repeat = 4; //a loop for repeating the transaction
+        int aux = 0;
+        int teste = 0;
         for (int i = 0; i < repeat; i++) {
             try {
                 Thread.sleep(5000);
@@ -38,12 +39,25 @@ public class tcpMestre {
                 System.out.println("Coils Status = " + res_coils);
 
                 //READING THE INPUTS (SENSORS)
-                BitVector res_sensors = tcpMestre.readSensors(con_plant, 0, 2);
+                BitVector res_sensors = tcpMestre.readSensors(con_plant, 0, 136);
                 System.out.println("Inputs Status = " + res_sensors);
-
+                System.out.println("Sensor Warehouse Out: " + res_sensors.getBit(0));
+                System.out.println("Sensor Warehouse Out: " + res_sensors.getBit(2));
                 //READ THE R VARIABLE (PIECES)
-
-                tcpMestre.writeRegister(con_plant, 0, 6);
+                if(aux == 0) {
+                    tcpMestre.writeRegister(con_plant, 0, 6);
+                    aux = 1;
+                }
+                else if (teste == 1) {
+                    tcpMestre.writeRegister(con_plant, 0, 2);
+                    aux = 1;
+                    teste = 0;
+                }
+                else if(aux == 1) {
+                    teste = 1;
+                    aux = 2;
+                    tcpMestre.writeRegister(con_plant, 0, 0);
+                }
 
                 ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plant, 0, 1);
                 System.out.println("Piece: " + res_variables.getRegisterValue(0));
