@@ -5,6 +5,10 @@ public class Piece {
     int id;
     String color = new String();
 
+    public Piece(int id) {
+        this.id = id;
+        setPiece(this, id);
+    }
     public static void setPiece(Piece p, int id) {
         p.id = id;
         switch (id) {
