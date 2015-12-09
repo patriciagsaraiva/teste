@@ -12,7 +12,6 @@ public class Manager {
         InetAddress addr = null;
         int port_plant = 5502;
         int port_plc = 5501;
-
         try {
             addr = InetAddress.getByName(args[0]);
 
@@ -27,9 +26,6 @@ public class Manager {
             //READING THE COILS (MOTORS)
             BitVector actuatorInfo = tcpMestre.readCoils(con_plant, 0, 189);
             System.out.println("Coils Status = " + actuatorInfo);
-            for (int i = 128; i <= 136; i++) {
-                System.out.println("Coil " + i + "            : " + actuatorInfo.getBit(i));
-            }
 
         } catch (Exception ex) {
             ex.printStackTrace();
