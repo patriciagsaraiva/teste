@@ -5,8 +5,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 
-
-
 public class udpMestre {
 
     public static void main(String args[]) throws Exception {
@@ -21,15 +19,7 @@ public class udpMestre {
             sendData = sentence.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 54321);
             clientSocket.send(sendPacket);
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            clientSocket.receive(receivePacket);
-            String modifiedSentence = new String(receivePacket.getData());
-            String a = new String();
-            for (int i = 0; i < 9; i++) {
 
-                    a +=modifiedSentence.charAt(i);
-            }
-            System.out.println("FROM SERVER:" + a);
             clientSocket.close();
 
     }

@@ -1,21 +1,24 @@
 import net.wimpi.modbus.net.TCPMasterConnection;
 import net.wimpi.modbus.util.BitVector;
-
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Created by Ruben on 09-12-2015.
- */
+
 public class Manager {
 
-    public static void main(String[] args) {
-        InetAddress addr = null;
+    public static ArrayList<Order> orderList = new ArrayList<Order>();
+
+    public static void main(String[] args) throws Exception {
+        InetAddress addr;
         int port_plant = 5502;
         int port_plc = 5501;
         TCPMasterConnection con_plant = null, con_plc = null;
-        int repeat =200;
+        int repeat = 200;
         int init = -1; // init will tell us if a piece was recently sent to the system
         long startTime = 0;
+
+        Manager.listen();
 
         try {
             addr = InetAddress.getByName(args[0]);
@@ -25,17 +28,15 @@ public class Manager {
             //CONNECTING TO THE PLC - ISAGRAF
             //TCPMasterConnection con_plc = tcpMaster.openConnection(addr,port_plc);
             //con_plc.connect();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) {ex.printStackTrace();}
+
+
         //for (int i = 0; i < repeat; i++) {
         while(true) {
             try {
                 if (init != -1)  // init = -1 is the first time the system runs
                     Thread.sleep(100);
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
+            } catch (InterruptedException ie) {ie.printStackTrace();}
 
             //READING THE INPUTS (SENSORS)
             BitVector sensors = Manager.receivePlantInfo(con_plant, "in");
@@ -58,6 +59,13 @@ public class Manager {
         //con_plant.close();
         //con_plc.close();
     }
+
+    public static void listen(){
+        udpEscravo slave = new udpEscravo();
+        Thread t = new Thread(slave);
+        t.start();
+    }
+
     private static BitVector receivePlantInfo(TCPMasterConnection con, String type) {
         int inputSensors = 136;
         int outputCoils = 189;
@@ -88,5 +96,6 @@ public class Manager {
     private static boolean getStatus(BitVector vector, int index) {
         return vector.getBit(index);
     }
+
 }
 
