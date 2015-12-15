@@ -27,7 +27,7 @@ public class Manager {
             con_plant.connect();
             //CONNECTING TO THE PLC - ISAGRAF
             con_plc = tcpMaster.openConnection(addr, port_plc);
-            con_plc.connect();
+            //con_plc.connect();
         } catch (Exception ex) {ex.printStackTrace();}
 
 
@@ -48,7 +48,7 @@ public class Manager {
                 init++;
                 tcpMaster.sendPiece(con_plant, 0, 2);
                 write[0] = 2; write[1] = 8;
-                tcpMaster.updateFields(con_plc, 0, write);
+                //tcpMaster.updateFields(con_plc, 0, write);
                 startTime = System.currentTimeMillis();
             }
             if(init == 1 && (startTime == 0 || System.currentTimeMillis()-startTime > 3500)){
