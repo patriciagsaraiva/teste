@@ -10,66 +10,70 @@ import net.wimpi.modbus.util.*;
 // VM options: -Dnet.wimpi.modbus.debug=true
 // Program arguments: localhost  <-----------------------------------------------!!!!!!!!!!!!!!!!!!!!
 
-public class tcpMestre {
+public class tcpMaster {
 
     public static void main(String[] args) {
 
         InetAddress addr = null;
         int port_plant = 5502;
         int port_plc = 5501;
-        int repeat = 4; //a loop for repeating the transaction
-        int aux = 0;
+        int repeat = 20; //a loop for repeating the transaction
+        int aux = 0, init = 0;
         int teste = 0;
         for (int i = 0; i < repeat; i++) {
             try {
-                Thread.sleep(5000);
+                if(init > 0)
+                    Thread.sleep(500);
             } catch(InterruptedException ie) {}
 
             try {
+                if(init == 0)
+                    init++;
                 //1. Setup the parameters
                 addr = InetAddress.getByName(args[0]);
 
                 //2. Open the connections
-                TCPMasterConnection con_plant = tcpMestre.openConnection(addr, port_plant);
+                TCPMasterConnection con_plant = tcpMaster.openConnection(addr, port_plant);
 
                 con_plant.connect();
 
                 //READING THE COILS (MOTORS)
-                BitVector res_coils = tcpMestre.readCoils(con_plant, 0, 6);
+                BitVector res_coils = tcpMaster.readCoils(con_plant, 0, 0);
                 System.out.println("Coils Status = " + res_coils);
 
                 //READING THE INPUTS (SENSORS)
-                BitVector res_sensors = tcpMestre.readSensors(con_plant, 0, 136);
+                BitVector res_sensors = tcpMaster.readSensors(con_plant, 0, 136);
                 System.out.println("Inputs Status = " + res_sensors);
                 System.out.println("Sensor Warehouse Out: " + res_sensors.getBit(0));
                 System.out.println("Sensor Warehouse Out: " + res_sensors.getBit(2));
+
                 //READ THE R VARIABLE (PIECES)
-                if(aux == 0) {
-                    tcpMestre.writeRegister(con_plant, 0, 6);
+                /*if(aux == 0) {
+                    tcpMaster.sendPiece(con_plant, 0, 6);
                     aux = 1;
                 }
                 else if (teste == 1) {
-                    tcpMestre.writeRegister(con_plant, 0, 2);
+                    tcpMaster.sendPiece(con_plant, 0, 2);
                     aux = 1;
                     teste = 0;
                 }
                 else if(aux == 1) {
                     teste = 1;
                     aux = 2;
-                    tcpMestre.writeRegister(con_plant, 0, 0);
-                }
+                    tcpMaster.sendPiece(con_plant, 0, 0);
+                }*/
 
-                ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plant, 0, 1);
+                ReadMultipleRegistersResponse res_variables = tcpMaster.readVariables(con_plant, 0, 1);
                 System.out.println("Piece: " + res_variables.getRegisterValue(0));
 
 
                 con_plant.close();
 
                 //READING THE VARIABLES (PLC)
-                //TCPMasterConnection con_plc = tcpMestre.openConnection(addr,port_plc);
+                //TCPMasterConnection con_plc = tcpMaster.openConnection(addr,port_plc);
                 //con_plc.connect();
 
-                //ReadMultipleRegistersResponse res_variables = tcpMestre.readVariables(con_plc, 0, 2, 2);
+                //ReadMultipleRegistersResponse res_variables = tcpMaster.readVariables(con_plc, 0, 2, 2);
                 //System.out.println("Variables Status = " + res_variables.getRegisterValue(0) + ", " + res_variables.getRegisterValue(1));
 
                 //con_plc.close();
@@ -158,6 +162,10 @@ public class tcpMestre {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static void sendPiece(TCPMasterConnection con, int ref, int value) {
+        writeRegister(con, ref, value);
     }
 }
 
