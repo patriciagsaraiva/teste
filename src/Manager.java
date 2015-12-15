@@ -26,8 +26,8 @@ public class Manager {
             con_plant = tcpMaster.openConnection(addr, port_plant);
             con_plant.connect();
             //CONNECTING TO THE PLC - ISAGRAF
-            //TCPMasterConnection con_plc = tcpMaster.openConnection(addr,port_plc);
-            //con_plc.connect();
+            con_plc = tcpMaster.openConnection(addr, port_plc);
+            con_plc.connect();
         } catch (Exception ex) {ex.printStackTrace();}
 
 
@@ -44,8 +44,11 @@ public class Manager {
             BitVector coils = Manager.receivePlantInfo(con_plant, "out");
 
             if (checkIfFree(sensors,coils, init)) {
+                int[] write = new int[2];
                 init++;
                 tcpMaster.sendPiece(con_plant, 0, 2);
+                write[0] = 2; write[1] = 8;
+                tcpMaster.updateFields(con_plc, 0, write);
                 startTime = System.currentTimeMillis();
             }
             if(init == 1 && (startTime == 0 || System.currentTimeMillis()-startTime > 3500)){

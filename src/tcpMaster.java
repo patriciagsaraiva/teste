@@ -164,8 +164,28 @@ public class tcpMaster {
         }
     }
 
+    public static void writeRegister (TCPMasterConnection con, int ref, int value[], int id) {
+        try {
+            Register r1 = new SimpleRegister(value[0]);
+            Register r2 = new SimpleRegister(value[1]);
+            Register[] R = new Register[]{r1, r2};
+
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+            WriteMultipleRegistersRequest req = new WriteMultipleRegistersRequest(ref, R);
+            req.setUnitID(id);
+            trans.setRequest(req);
+            trans.execute();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void sendPiece(TCPMasterConnection con, int ref, int value) {
         writeRegister(con, ref, value);
+    }
+
+    public static void updateFields(TCPMasterConnection con, int ref, int value[]) {
+        writeRegister(con, ref, value, 2);
     }
 }
 
