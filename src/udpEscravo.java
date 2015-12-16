@@ -33,8 +33,9 @@ public class udpEscravo implements Runnable {
         order.PF = new Piece(Integer.parseInt(sentence.substring(6, 7)));
         order.n  = Integer.parseInt(sentence.substring(7, 9));
 
+        order.entry = System.currentTimeMillis();
+
         Manager.orderList.add(order);
-        Manager.printOrderList(Manager.orderList);
     }
 
 }

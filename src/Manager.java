@@ -4,7 +4,8 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-
+// VM OPTIONS:          -Dnet.wimpi.modbus.debug=true
+// PROGRAM ARGUMENTS:   localhost
 public class Manager {
 
     public static ArrayList<Order> orderList = new ArrayList<Order>();
@@ -16,6 +17,8 @@ public class Manager {
         TCPMasterConnection con_plant = null, con_plc = null;
         int repeat = 200;
         int init = -1; // init controls new pieces sent to the system. -1 for "system start", "0 for no recent piece", "1 for piece sending"
+        int[] unload = {0,0,0};
+        int orders = 0;
         long startTime = 0; // timer to control time difference between sending piece and it appearing on sensor
 
         // setup UDP communications
@@ -35,6 +38,13 @@ public class Manager {
 
         //for (int i = 0; i < repeat; i++) {
         while(true) {
+
+            if(orderList.size() > orders) {
+                System.out.println("New order: ");
+                Order.printOrder(orderList.get(orderList.size() - 1));
+                orders++;
+            }
+
             try {
                 if (init != -1)  // init = -1 is the first time the system runs
                     Thread.sleep(100);
@@ -58,12 +68,12 @@ public class Manager {
                 tcpMaster.sendPiece(con_plant, 0, 0);
             }
 
+            unload = checkForLoad(sensors, unload);
+            if(unload[2] != 0)
+                orderList.add(loadPieceOrder(unload[2]));
+
             if(init == -1)
                 init = 0;
-
-            if(orderList.size() > 0) {
-                printOrderList(orderList);
-            }
         }
         //con_plant.close();
         //con_plc.close();
@@ -86,7 +96,7 @@ public class Manager {
         else if(type == "out")
             res = tcpMaster.readCoils(con, 0, outputCoils);
 
-        //System.out.println("Inputs Status = " + res);
+        //System.out.println("Status = " + res);
         return res;
     }
     // Check if system is free to receive a piece on warehouse conveyor
@@ -109,6 +119,39 @@ public class Manager {
         for (int i = 0; i < list.size(); i++) {
             Order.printOrder(list.get(i));
         }
+    }
+    // Check for pieces in the loading conveyors
+    public static int[] checkForLoad(BitVector sensors, int[] unload) {
+
+        if(unload[2] != 0)
+            unload[2] = 0;
+
+        if(unload[0] == 1 && !sensors.getBit(123))
+            unload[0] = 0;
+        if(unload[1] == 1 && !sensors.getBit(134))
+            unload[1] = 0;
+
+        if(sensors.getBit(123) && unload[0] == 0) {
+            unload[0] = 1;
+            unload[2] = 1;
+        }
+
+        else if(sensors.getBit(134) && unload[1] == 0) {
+            unload[1] = 1;
+            unload[2] = 2;
+        }
+
+        return unload;
+    }
+    // Add a new Load Piece order to the list
+    public static Order loadPieceOrder(int conveyor) {
+        Order order = new Order();
+        order.id = 'C';
+        order.C = new Integer(conveyor);
+
+        order.entry = System.currentTimeMillis();
+
+        return order;
     }
 
 }
