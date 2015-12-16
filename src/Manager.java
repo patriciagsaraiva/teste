@@ -15,11 +15,13 @@ public class Manager {
         int port_plc = 5501;
         TCPMasterConnection con_plant = null, con_plc = null;
         int repeat = 200;
-        int init = -1; // init will tell us if a piece was recently sent to the system
-        long startTime = 0;
+        int init = -1; // init controls new pieces sent to the system. -1 for "system start", "0 for no recent piece", "1 for piece sending"
+        long startTime = 0; // timer to control time difference between sending piece and it appearing on sensor
 
+        // setup UDP communications
         Manager.listen();
 
+        // estabilish connections to PLANT and PLC
         try {
             addr = InetAddress.getByName(args[0]);
             //CONNECTING TO THE PLANT
@@ -58,6 +60,10 @@ public class Manager {
 
             if(init == -1)
                 init = 0;
+
+            if(orderList.size() > 0) {
+                printOrderList(orderList);
+            }
         }
         //con_plant.close();
         //con_plc.close();
@@ -69,6 +75,7 @@ public class Manager {
         t.start();
     }
 
+    // Receive info from sfs plant. "info" decides if from sensors - "in" or coils - "out"
     private static BitVector receivePlantInfo(TCPMasterConnection con, String type) {
         int inputSensors = 136;
         int outputCoils = 189;
@@ -82,12 +89,13 @@ public class Manager {
         //System.out.println("Inputs Status = " + res);
         return res;
     }
+    // Check if system is free to receive a piece on warehouse conveyor
     private static boolean checkIfFree(BitVector sensors, BitVector coils, int init) {
         if(init != 0)
             return false;
 
-        boolean plantFree = !getStatus(sensors, 0);
-        boolean entryMotor = getStatus(coils, 1);
+        boolean plantFree = !sensors.getBit(0);
+        boolean entryMotor = coils.getBit(1);
         //System.out.println("Plant is free: " + plantFree);
         //System.out.println("Motor is on: " + entryMotor);
 
@@ -96,8 +104,11 @@ public class Manager {
 
         return false;
     }
-    private static boolean getStatus(BitVector vector, int index) {
-        return vector.getBit(index);
+    // Print all orders
+    public static void printOrderList(List<Order> list) {
+        for (int i = 0; i < list.size(); i++) {
+            Order.printOrder(list.get(i));
+        }
     }
 
 }

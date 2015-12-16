@@ -26,5 +26,13 @@ public class Order {
         this.ready = 0; this.processing = 0; this.pending = 0;
         this.entry = 0; this.init = 0; this.done = 0;
     }
+
+    public static void printOrder(Order o) {
+        System.out.println("Order... T: " + o.id + "  NO: " + o.NO +
+                           "  PO, Color: " + o.PO.id +", " + o.PO.color +
+                           "  PF, Color: " + o.PO.id +", " + o.PO.color +
+                           "  N: " + o.n);
+
+    }
 }
 
