@@ -36,7 +36,23 @@ public class udpEscravo implements Runnable {
 
 
         Order order = new Order();
+
+        order.id = parts.get(0).charAt(0);
+
+        order.NO=Integer.parseInt(parts.get(1));
+
+        order.PO = new Piece(Integer.parseInt(parts.get(2)));
+
+        order.PF = new Piece(Integer.parseInt(parts.get(3)));
+
+        order.n = Integer.parseInt(parts.get(4));
+
+        System.out.println("Peça... TIPO:" + order.id + "   NO: " + order.NO + "   PO: " + order.PO.id + "   PF: " + order.PF.id + "   N: " + order.n);
+
         Manager.orderList.add(order);
+
+        Manager.printOrderList(Manager.orderList);
+
 
     }
 
