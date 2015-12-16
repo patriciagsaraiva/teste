@@ -25,35 +25,16 @@ public class udpEscravo implements Runnable {
     }
 
     public static void decodeMessage (String sentence /*, char trans, int no, int pIni, int pFin, int n*/) {
-        List<String> parts = new ArrayList<String>();
-
-        parts.add(sentence.substring(1,2));
-        parts.add(sentence.substring(2, 5));
-        parts.add(sentence.substring(5, 6));
-        parts.add(sentence.substring(6, 7));
-        parts.add(sentence.substring(7, 9));
-        System.out.println("Order received: " + parts);
-
-
         Order order = new Order();
 
-        order.id = parts.get(0).charAt(0);
-
-        order.NO=Integer.parseInt(parts.get(1));
-
-        order.PO = new Piece(Integer.parseInt(parts.get(2)));
-
-        order.PF = new Piece(Integer.parseInt(parts.get(3)));
-
-        order.n = Integer.parseInt(parts.get(4));
-
-        System.out.println("Peça... TIPO:" + order.id + "   NO: " + order.NO + "   PO: " + order.PO.id + "   PF: " + order.PF.id + "   N: " + order.n);
+        order.id = sentence.substring(1,2).charAt(0);
+        order.NO = Integer.parseInt(sentence.substring(2, 5));
+        order.PO = new Piece(Integer.parseInt(sentence.substring(5, 6)));
+        order.PF = new Piece(Integer.parseInt(sentence.substring(6, 7)));
+        order.n  = Integer.parseInt(sentence.substring(7, 9));
 
         Manager.orderList.add(order);
-
         Manager.printOrderList(Manager.orderList);
-
-
     }
 
 }
