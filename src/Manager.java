@@ -6,16 +6,15 @@ import java.util.List;
 
 // VM OPTIONS:          -Dnet.wimpi.modbus.debug=true
 // PROGRAM ARGUMENTS:   localhost
+
 public class Manager {
 
     public static ArrayList<Order> orderList = new ArrayList<Order>();
 
     public static void main(String[] args) throws Exception {
         InetAddress addr;
-        int port_plant = 5502;
-        int port_plc = 5501;
+        int port_plant = 5502, port_plc = 5501;
         TCPMasterConnection con_plant = null, con_plc = null;
-        int repeat = 200;
         int init = -1; // init controls new pieces sent to the system. -1 for "system start", "0 for no recent piece", "1 for piece sending"
         int[] unload = {0,0,0};
         int orders = 0;
@@ -36,7 +35,7 @@ public class Manager {
         } catch (Exception ex) {ex.printStackTrace();}
 
 
-        //for (int i = 0; i < repeat; i++) {
+        /*--------------------------------- MAIN CYCLE ---------------------------------*/
         while(true) {
 
             if(orderList.size() > orders) {
@@ -55,7 +54,7 @@ public class Manager {
             //READING THE COILS (MOTORS)
             BitVector coils = Manager.receivePlantInfo(con_plant, "out");
 
-            if (checkIfFree(sensors,coils, init)) {
+            if (checkIfFree(sensors, coils, init)) {
                 int[] write = new int[2];
                 init++;
                 tcpMaster.sendPiece(con_plant, 0, 2);
@@ -72,11 +71,12 @@ public class Manager {
             if(unload[2] != 0)
                 orderList.add(loadPieceOrder(unload[2]));
 
-            if(init == -1)
+            if(init == -1) {
                 init = 0;
+                Manager.generateWindow();
+            }
+
         }
-        //con_plant.close();
-        //con_plc.close();
     }
 
     public static void listen(){
@@ -84,7 +84,11 @@ public class Manager {
         Thread t = new Thread(slave);
         t.start();
     }
-
+    public static void generateWindow() {
+        GUI window = new GUI();
+        Thread t = new Thread(window);
+        t.start();
+    }
     // Receive info from sfs plant. "info" decides if from sensors - "in" or coils - "out"
     private static BitVector receivePlantInfo(TCPMasterConnection con, String type) {
         int inputSensors = 136;

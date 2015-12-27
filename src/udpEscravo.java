@@ -32,6 +32,7 @@ public class udpEscravo implements Runnable {
         order.PO = new Piece(Integer.parseInt(sentence.substring(5, 6)));
         order.PF = new Piece(Integer.parseInt(sentence.substring(6, 7)));
         order.n  = Integer.parseInt(sentence.substring(7, 9));
+        order.pending = Integer.parseInt(sentence.substring(7, 9));
 
         order.entry = System.currentTimeMillis();
 

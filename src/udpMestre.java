@@ -15,7 +15,7 @@ public class udpMestre {
             InetAddress IPAddress = InetAddress.getByName("localhost");
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
-            String sentence = ":T0012510";
+            String sentence = ":T0022505";
             sendData = sentence.getBytes();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 54321);
             clientSocket.send(sendPacket);

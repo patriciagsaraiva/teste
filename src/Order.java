@@ -1,8 +1,3 @@
-
-/*
-    TODO: acrescentar a ordem de carga de peças
-*/
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -34,7 +29,6 @@ public class Order {
 
     public static void printOrder(Order o) {
         DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
-
 
         if(o.id == 'T') {
             System.out.println("ID: " + o.id + "  NO: " + o.NO +
