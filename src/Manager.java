@@ -89,6 +89,7 @@ public class Manager {
         Thread t = new Thread(window);
         t.start();
     }
+
     // Receive info from sfs plant. "info" decides if from sensors - "in" or coils - "out"
     private static BitVector receivePlantInfo(TCPMasterConnection con, String type) {
         int inputSensors = 136;

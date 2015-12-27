@@ -28,12 +28,30 @@ public class udpEscravo implements Runnable {
         Order order = new Order();
 
         order.id = sentence.substring(1,2).charAt(0);
-        order.NO = Integer.parseInt(sentence.substring(2, 5));
-        order.PO = new Piece(Integer.parseInt(sentence.substring(5, 6)));
-        order.PF = new Piece(Integer.parseInt(sentence.substring(6, 7)));
-        order.n  = Integer.parseInt(sentence.substring(7, 9));
-        order.pending = Integer.parseInt(sentence.substring(7, 9));
 
+        switch(order.id) {
+            case 'T':
+                order.NO = Integer.parseInt(sentence.substring(2, 5));
+                order.PO = new Piece(Integer.parseInt(sentence.substring(5, 6)));
+                order.PF = new Piece(Integer.parseInt(sentence.substring(6, 7)));
+                order.n  = Integer.parseInt(sentence.substring(7, 9));
+                break;
+            case 'M':
+                order.NO = Integer.parseInt(sentence.substring(2, 5));
+                order.PB = new Piece(Integer.parseInt(sentence.substring(5, 6)));
+                order.PC = new Piece(Integer.parseInt(sentence.substring(6, 7)));
+                order.n  = Integer.parseInt(sentence.substring(7, 9));
+                break;
+            case 'U':
+                order.NO = Integer.parseInt(sentence.substring(2, 5));
+                order.P  = new Piece(Integer.parseInt(sentence.substring(5, 6)));
+                order.D  = Integer.parseInt(sentence.substring(6, 7));
+                order.n  = Integer.parseInt(sentence.substring(7, 9));
+                break;
+        }
+
+
+        order.pending = Integer.parseInt(sentence.substring(7, 9));
         order.entry = System.currentTimeMillis();
 
         Manager.orderList.add(order);

@@ -30,16 +30,32 @@ public class Order {
     public static void printOrder(Order o) {
         DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
 
-        if(o.id == 'T') {
-            System.out.println("ID: " + o.id + "  NO: " + o.NO +
-                             "  PO, Color: (" + o.PO.id + ", " + o.PO.color +
-                            ")  PF, Color: (" + o.PF.id + ", " + o.PF.color +
-                            ")  N: " + o.n);
-            System.out.println("Entry time: " + formatter.format(o.entry));
-        }
-        if(o.id == 'C') {
-            System.out.println("ID: " + o.id + "  Tapete: " + o.C);
-            System.out.println("Entry time: " + formatter.format(o.entry));
+        switch (o.id) {
+            case 'T':
+                System.out.println("ID: " + o.id + "  NO: " + o.NO +
+                        "  PO, Color: (" + o.PO.id + ", " + o.PO.color +
+                        ")  PF, Color: (" + o.PF.id + ", " + o.PF.color +
+                        ")  N: " + o.n);
+                System.out.println("Entry time: " + formatter.format(o.entry));
+                break;
+            case 'M':
+                System.out.println("ID: " + o.id + "  NO: " + o.NO +
+                        "  PB, Color: (" + o.PB.id + ", " + o.PB.color +
+                        ")  Pc, Color: (" + o.PC.id + ", " + o.PC.color +
+                        ")  N: " + o.n);
+                System.out.println("Entry time: " + formatter.format(o.entry));
+                break;
+            case 'U':
+                System.out.println("ID: " + o.id + "  NO: " + o.NO +
+                        "  P, Color: (" + o.P.id + ", " + o.P.color +
+                        ")  D: (" + o.D +
+                        ")  N: " + o.n);
+                System.out.println("Entry time: " + formatter.format(o.entry));
+                break;
+            case 'C':
+                System.out.println("ID: " + o.id + "  Tapete: " + o.C);
+                System.out.println("Entry time: " + formatter.format(o.entry));
+                break;
         }
     }
 }
