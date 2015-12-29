@@ -73,9 +73,7 @@ public class tcpMaster {
             trans.setRequest(req);
             trans.execute();
             res = (ReadMultipleRegistersResponse) trans.getResponse();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        } catch (Exception ex) { ex.printStackTrace(); }
         return res;
     }
 
@@ -93,15 +91,14 @@ public class tcpMaster {
         }
     }
 
-    public static void writeRegister (TCPMasterConnection con, int ref, int value[], int id) {
+    public static void writeRegister (TCPMasterConnection con, int ref, int value, int slaveId) {
         try {
-            Register r1 = new SimpleRegister(value[0]);
-            Register r2 = new SimpleRegister(value[1]);
-            Register[] R = new Register[]{r1, r2};
+            Register r1 = new SimpleRegister(value);
+            Register[] R = new Register[]{r1};
 
             ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
             WriteMultipleRegistersRequest req = new WriteMultipleRegistersRequest(ref, R);
-            req.setUnitID(id);
+            req.setUnitID(slaveId);
             trans.setRequest(req);
             trans.execute();
         } catch (Exception ex) {
@@ -109,12 +106,40 @@ public class tcpMaster {
         }
     }
 
-    public static void sendPiece(TCPMasterConnection con, int ref, int value) {
+    public static void sendPiece(TCPMasterConnection con_plant, TCPMasterConnection con_plc, int type, int cmd) {
+        writeRegister(con_plc, 50, type, 2);
+        writeRegister(con_plc, 0, cmd, 2);
+
+        writeRegister(con_plant, 0, type);
+    }
+
+    public static void resetPiece(TCPMasterConnection con, int ref, int value) {
         writeRegister(con, ref, value);
     }
 
-    public static void updateFields(TCPMasterConnection con, int ref, int value[]) {
-        writeRegister(con, ref, value, 2);
+    public static void loadIntoWarehouse(TCPMasterConnection con, int ref, boolean value) {
+
+        try {
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+            WriteCoilRequest req = new WriteCoilRequest(ref, value);
+            trans.setRequest(req);
+            trans.execute();
+        } catch (Exception ex) {ex.printStackTrace();}
+    }
+
+    public static BitVector readFromPLC(TCPMasterConnection con, int slaveId) {
+        ReadCoilsResponse res = null;
+        try {
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+            ReadCoilsRequest req = new ReadCoilsRequest(0, 1);
+            req.setUnitID(slaveId);
+            trans.setRequest(req);
+            trans.execute();
+
+            res = (ReadCoilsResponse) trans.getResponse();
+        } catch (Exception ex) { ex.printStackTrace(); }
+
+        return res.getCoils();
     }
 }
 

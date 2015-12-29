@@ -10,15 +10,21 @@ import java.util.List;
 public class Manager {
 
     public static ArrayList<Order> orderList = new ArrayList<Order>();
+    public static ArrayList<Cell> cellList = new ArrayList<Cell>();
+    public static ArrayList<Machine> machineList = new ArrayList<Machine>();
+    public static BitVector sensors;
+    public static BitVector coils;
+    public static TCPMasterConnection con_plant;
+    public static TCPMasterConnection con_plc;
+
 
     public static void main(String[] args) throws Exception {
         InetAddress addr;
         int port_plant = 5502, port_plc = 5501;
-        TCPMasterConnection con_plant = null, con_plc = null;
         int init = -1; // init controls new pieces sent to the system. -1 for "system start", "0 for no recent piece", "1 for piece sending"
         int[] unload = {0,0,0};
         int orders = 0;
-        long startTime = 0; // timer to control time difference between sending piece and it appearing on sensor
+        int sendIn = 0;
 
         // setup UDP communications
         Manager.listen();
@@ -31,14 +37,30 @@ public class Manager {
             con_plant.connect();
             //CONNECTING TO THE PLC - ISAGRAF
             con_plc = tcpMaster.openConnection(addr, port_plc);
-            //con_plc.connect();
+            con_plc.connect();
         } catch (Exception ex) {ex.printStackTrace();}
 
+        /*------------------------- SET UP THE CELLS, MACHINES -------------------------*/
+        for (int i = 0; i < 4; i++) {
+            cellList.add(new Cell(i+1));
+        }
+        // cell 1
+        machineList.add(new Machine("Ma", 1));
+        machineList.add(new Machine("Mc", 1));
+        // cell 2
+        machineList.add(new Machine("Ma", 2));
+        machineList.add(new Machine("Mb", 2));
+        // cell 3
+        machineList.add(new Machine("Ma", 3));
+        machineList.add(new Machine("Mb", 3));
+        // cell 4
+        machineList.add(new Machine("Ma", 4));
+        machineList.add(new Machine("Mb", 4));
 
         /*--------------------------------- MAIN CYCLE ---------------------------------*/
         while(true) {
 
-            if(orderList.size() > orders) {
+            if (orderList.size() > orders) {
                 System.out.println("New order: ");
                 Order.printOrder(orderList.get(orderList.size() - 1));
                 orders++;
@@ -49,37 +71,43 @@ public class Manager {
                     Thread.sleep(100);
             } catch (InterruptedException ie) {ie.printStackTrace();}
 
-            //READING THE INPUTS (SENSORS)
-            BitVector sensors = Manager.receivePlantInfo(con_plant, "in");
-            //READING THE COILS (MOTORS)
-            BitVector coils = Manager.receivePlantInfo(con_plant, "out");
+            // READING SENSORS, MOTORS FROM PLANT
+            Manager.sensors = receivePlantInfo(con_plant, "in");
+            Manager.coils = receivePlantInfo(con_plant, "out");
+            //BitVector teste = tcpMaster.readFromPLC(con_plc, 3);
 
-            if (checkIfFree(sensors, coils, init)) {
-                int[] write = new int[2];
-                init++;
-                tcpMaster.sendPiece(con_plant, 0, 2);
-                write[0] = 2; write[1] = 8;
-                //tcpMaster.updateFields(con_plc, 0, write);
-                startTime = System.currentTimeMillis();
-            }
-            if(init == 1 && (startTime == 0 || System.currentTimeMillis()-startTime > 3500)){
-                init--;
-                tcpMaster.sendPiece(con_plant, 0, 0);
-            }
+            //System.out.println("Ocupada C1: " + teste.getBit(0));
 
+            // STARTING THE NEXT POSSIBLE ORDER
+            int nextOrder = getNextOrder();
+            if (nextOrder != -1)
+                startOrder(Manager.orderList.get(nextOrder));
+
+            // CHECK FOR PIECES IN LOADING CONVEYORS
             unload = checkForLoad(sensors, unload);
-            if(unload[2] != 0)
+            if (unload[2] != 0)
                 orderList.add(loadPieceOrder(unload[2]));
 
-            if(init == -1) {
-                init = 0;
-                Manager.generateWindow();
+            // CHECK TO SEND PIECES INTO THE WAREHOUSE
+            if(sensors.getBit(1) && sendIn == 0) {
+                sendIn = 1;
+                tcpMaster.loadIntoWarehouse(con_plant, 4, true);
             }
 
+
+            if (init == -1) {
+                init = 0;
+                tcpMaster.resetPiece(Manager.con_plant, 0, 0);
+                Manager.generateWindow();
+            }
         }
     }
 
-    public static void listen(){
+    public static void startOrder(Order o) {
+        Thread t = new Thread(o);
+        t.start();
+    }
+    public static void listen() {
         udpEscravo slave = new udpEscravo();
         Thread t = new Thread(slave);
         t.start();
@@ -90,6 +118,18 @@ public class Manager {
         t.start();
     }
 
+    // Determine the next Order to go into the system
+    private static int getNextOrder() {
+        int n = -1;
+
+        for (int i = 0; i < orderList.size(); i++) {
+            if(orderList.get(i).state == "pendente") {
+                n = i;
+            }
+        }
+
+        return n;
+    }
     // Receive info from sfs plant. "info" decides if from sensors - "in" or coils - "out"
     private static BitVector receivePlantInfo(TCPMasterConnection con, String type) {
         int inputSensors = 136;
@@ -105,16 +145,16 @@ public class Manager {
         return res;
     }
     // Check if system is free to receive a piece on warehouse conveyor
-    private static boolean checkIfFree(BitVector sensors, BitVector coils, int init) {
+    public static boolean checkIfFree(BitVector sensors, BitVector coils, int init) {
         if(init != 0)
             return false;
 
-        boolean plantFree = !sensors.getBit(0);
-        boolean entryMotor = coils.getBit(1);
+        boolean AT1S = !sensors.getBit(0);
+        boolean AT1Mm = coils.getBit(1);
         //System.out.println("Plant is free: " + plantFree);
         //System.out.println("Motor is on: " + entryMotor);
 
-        if(plantFree && !entryMotor)
+        if(AT1S && !AT1Mm)
             return true;
 
         return false;
