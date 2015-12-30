@@ -17,12 +17,13 @@ public class Order implements Runnable {
 
     public void run() {
         int init = 0;
+        int cmd;
         long startTime = 0; // timer to control time difference between sending piece and it appearing on sensor
-        int cmd = 1;
         this.state = "a processar";
         this.init = System.currentTimeMillis();
         switch  (this.id) {
             case 'T':
+                cmd = getCommand(this);
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
                     if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
@@ -38,22 +39,27 @@ public class Order implements Runnable {
                 }
                 break;
             case 'M':
-                cmd = 20;
+                int piece = 0;
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
                     if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
                         init++;
-                        tcpMaster.sendPiece(Manager.con_plant, Manager.con_plc, this.PC.id, cmd);
+                        if(piece == 0)
+                            tcpMaster.sendPiece(Manager.con_plant, Manager.con_plc, this.PC.id, 20);
+                        else if(piece == 1)
+                            tcpMaster.sendPiece(Manager.con_plant, Manager.con_plc, this.PB.id, 19);
                         System.out.println("Piece sent [order " + this.NO + "]");
                     }
                     else if (init == 1 && Manager.sensors.getBit(0)) {
                         init--;
+                        piece++;
                         updatePieces(this);
                         tcpMaster.resetPiece(Manager.con_plant, 0, 0);
                     }
                 }
                 break;
             case 'U':
+                cmd = 21;
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
                     if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
@@ -186,6 +192,65 @@ public class Order implements Runnable {
     private static void updatePieces(Order o) {
         o.pending--;
         o.processing++;
+    }
+    public static int getCommand(Order order) {
+        int cmd = 0;
+
+        if(order.PO.id == 1)
+            switch(order.PF.id) {
+                case 2:
+                    return 1;
+                case 3:
+                    return 2;
+                case 4:
+                    return 3;
+                case 5:
+                    return 4;
+                case 6:
+                    return 5;
+                case 7:
+                    return 6;
+                case 8:
+                    return 7;
+                case 9:
+                    return 8;
+            }
+
+        else if(order.PO.id == 2)
+            switch (order.PF.id) {
+                case 3:
+                    return 9;
+                case 4:
+                    return 10;
+            }
+
+        else if(order.PO.id == 3)
+            return 11;
+
+        else if(order.PO.id == 5)
+            switch (order.PF.id) {
+                case 6:
+                    return 12;
+                case 7:
+                    return 13;
+                case 8:
+                    return 14;
+                case 9:
+                    return 15;
+            }
+
+        else if(order.PO.id == 6)
+            return 16;
+
+        else if(order.PO.id == 8)
+            switch (order.PF.id) {
+                case 7:
+                    return 17;
+                case 9:
+                    return 18;
+            }
+
+        return cmd;
     }
 }
 
