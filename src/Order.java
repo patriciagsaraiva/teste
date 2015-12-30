@@ -26,7 +26,7 @@ public class Order implements Runnable {
                 cmd = getCommand(this);
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
-                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
+                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init, cmd)) {
                         init++;
                         tcpMaster.sendPiece(Manager.con_plant, Manager.con_plc, this.PO.id, cmd);
                         System.out.println("Piece sent [order " + this.NO + "]");
@@ -42,7 +42,7 @@ public class Order implements Runnable {
                 int piece = 0;
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
-                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
+                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init, 20)) {
                         init++;
                         if(piece == 0)
                             tcpMaster.sendPiece(Manager.con_plant, Manager.con_plc, this.PC.id, 20);
@@ -62,7 +62,7 @@ public class Order implements Runnable {
                 cmd = 21;
                 while (this.pending != 0) {
                     // CHECK IF PLANT IS READY TO RECEIVE PIECE
-                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init)) {
+                    if (init == 0 && Manager.checkIfFree(Manager.sensors, Manager.coils, init, 21)) {
                         init++;
                         if(this.D == 1)
                             cmd = 21;
@@ -78,8 +78,12 @@ public class Order implements Runnable {
                     }
                 }
                 break;
+            case 'C':
         }
+
         this.done = System.currentTimeMillis();
+        if(this.id != 'C')
+            this.state = "pronta";
         System.out.println("No more pieces pending in Order " + this.NO + ".");
 
     }

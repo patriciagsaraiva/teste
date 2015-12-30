@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class GUI extends JFrame implements Runnable {
     DateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+    SimpleDateFormat formatterS = new SimpleDateFormat("mm:ss");
     int orderNumber = -1;
     int machineNumber = 0;
 
@@ -445,7 +446,7 @@ public class GUI extends JFrame implements Runnable {
 
         while(true) {
             try {
-                Thread.sleep(50);
+                Thread.sleep(40);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -592,7 +593,7 @@ public class GUI extends JFrame implements Runnable {
             // UPDATE THE FIELDS
             Mv1.setText(Manager.machineList.get(machineNumber).type + " (" + Integer.toString(Manager.machineList.get(machineNumber).cell.number) + ")");
             if (Manager.machineList.get(machineNumber).operationTime != 0) {
-                Mv2.setText(formatter.format(Manager.machineList.get(machineNumber).operationTime));
+                Mv2.setText(formatterS.format(Manager.machineList.get(machineNumber).operationTime));
             } else Mv2.setText("0");
             Mv3.setText(Integer.toString(Machine.totalPieces(Manager.machineList.get(machineNumber))));
             Mv4.setText(Integer.toString(Manager.machineList.get(machineNumber).p[0]));

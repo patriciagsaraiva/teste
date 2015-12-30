@@ -6,10 +6,6 @@ import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.procimg.SimpleRegister;
 import net.wimpi.modbus.util.*;
 
-// CONFIGURAÇÕES DE RUN:
-// VM options: -Dnet.wimpi.modbus.debug=true
-// Program arguments: localhost  <-----------------------------------------------!!!!!!!!!!!!!!!!!!!!
-
 public class tcpMaster {
 
     public static TCPMasterConnection openConnection (InetAddress address, int port) {
@@ -118,7 +114,6 @@ public class tcpMaster {
     }
 
     public static void loadIntoWarehouse(TCPMasterConnection con, int ref, boolean value) {
-
         try {
             ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
             WriteCoilRequest req = new WriteCoilRequest(ref, value);
@@ -140,6 +135,20 @@ public class tcpMaster {
         } catch (Exception ex) { ex.printStackTrace(); }
 
         return res.getCoils();
+    }
+
+    public static ReadMultipleRegistersResponse readInternalVariables () {
+        ReadMultipleRegistersResponse res = null;
+        try {
+            ModbusTCPTransaction trans = new ModbusTCPTransaction(Manager.con_plc);
+            ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(0, 99);
+            req.setUnitID(2);
+            trans.setRequest(req);
+            trans.execute();
+
+            res = (ReadMultipleRegistersResponse) trans.getResponse();
+        } catch (Exception ex) { ex.printStackTrace(); }
+        return res;
     }
 }
 

@@ -1,4 +1,6 @@
+import net.wimpi.modbus.msg.ReadMultipleRegistersResponse;
 import net.wimpi.modbus.net.TCPMasterConnection;
+import net.wimpi.modbus.procimg.Register;
 import net.wimpi.modbus.util.BitVector;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ public class Manager {
     public static ArrayList<Machine> machineList = new ArrayList<Machine>();
     public static BitVector sensors;
     public static BitVector coils;
+    public static ReadMultipleRegistersResponse inputVariables;
     public static TCPMasterConnection con_plant;
     public static TCPMasterConnection con_plc;
 
@@ -25,6 +28,7 @@ public class Manager {
         int[] unload = {0,0,0};
         int orders = 0;
         int sendIn = 0;
+        int auxLoad = 0;
 
         // setup UDP communications
         Manager.listen();
@@ -58,6 +62,13 @@ public class Manager {
         machineList.add(new Machine("Mb", 4));
 
         /*--------------------------------- MAIN CYCLE ---------------------------------*/
+        // READING SENSORS, MOTORS FROM PLANT
+        Manager.sensors = receivePlantInfo(con_plant, "in");
+        Manager.coils = receivePlantInfo(con_plant, "out");
+
+        // FOLLOW THE MACHINES
+        trackMachines();
+
         while(true) {
 
             if (orderList.size() > orders) {
@@ -75,8 +86,7 @@ public class Manager {
             Manager.sensors = receivePlantInfo(con_plant, "in");
             Manager.coils = receivePlantInfo(con_plant, "out");
             //BitVector teste = tcpMaster.readFromPLC(con_plc, 3);
-
-            //System.out.println("Ocupada C1: " + teste.getBit(0));
+            inputVariables = tcpMaster.readInternalVariables();
 
             // STARTING THE NEXT POSSIBLE ORDER
             int nextOrder = getNextOrder();
@@ -85,18 +95,39 @@ public class Manager {
 
             // CHECK FOR PIECES IN LOADING CONVEYORS
             unload = checkForLoad(sensors, unload);
-            if (unload[2] != 0)
+            if (unload[2] != 0) {
                 orderList.add(loadPieceOrder(unload[2]));
+            }
+            if(coils.getBit(189) && auxLoad == 0) {
+                auxLoad = 1;
+                for (int i = 0; i < orderList.size(); i++) {
+                    if(orderList.get(i).id == 'T' && orderList.get(i).state == "pendente") {
+                        orderList.get(i).state = "a processar";
+                        orderList.get(i).ready++;
+                        orderList.get(i).processing--;
+                    }
+                }
+            }
+            if(auxLoad == 1 && !coils.getBit(189))
+                auxLoad = 0;
 
             // CHECK TO SEND PIECES INTO THE WAREHOUSE
-            if(sensors.getBit(1) && sendIn == 0) {
-                sendIn = 1;
+            if(sensors.getBit(1)) {
                 tcpMaster.loadIntoWarehouse(con_plant, 4, true);
-            }
+                sendIn = 1;
 
+            }
+            if(!sensors.getBit(1) && sendIn == 1) {
+                sendIn = 0;
+                int aux = getComplete();
+                orderList.get(aux).processing--;
+                orderList.get(aux).ready++;
+            }
 
             if (init == -1) {
                 init = 0;
+                tcpMaster.loadIntoWarehouse(con_plant, 4, false);
+
                 tcpMaster.resetPiece(Manager.con_plant, 0, 0);
                 Manager.generateWindow();
             }
@@ -117,7 +148,19 @@ public class Manager {
         Thread t = new Thread(window);
         t.start();
     }
+    public static void trackMachines(){
+        MachineFollower mf = new MachineFollower();
+        Thread t = new Thread(mf);
+        t.start();
+    }
 
+    private static int getComplete() {
+        for (int i = 0; i < orderList.size(); i++) {
+            if(orderList.get(i).processing != 0)
+                return i;
+        }
+        return orderList.size()-1;
+    }
     // Determine the next Order to go into the system
     private static int getNextOrder() {
         int n = -1;
@@ -145,9 +188,14 @@ public class Manager {
         return res;
     }
     // Check if system is free to receive a piece on warehouse conveyor
-    public static boolean checkIfFree(BitVector sensors, BitVector coils, int init) {
+    public static boolean checkIfFree(BitVector sensors, BitVector coils, int init, int cmd) {
         if(init != 0)
             return false;
+
+        if(cmd == 1 || cmd == 2 || cmd == 3 || cmd == 4
+                )
+            if(sensors.getBit(8) || (sensors.getBit(3)  || coils.getBit(14)))
+                return false;
 
         boolean AT1S = !sensors.getBit(0);
         boolean AT1Mm = coils.getBit(1);
@@ -193,6 +241,7 @@ public class Manager {
         Order order = new Order();
         order.id = 'C';
         order.C = new Integer(conveyor);
+        order.processing++;
 
         order.entry = System.currentTimeMillis();
 
